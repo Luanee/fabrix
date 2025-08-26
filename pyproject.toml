@@ -3,7 +3,7 @@ name = "fabrix"
 version = "0.1.0"
 description = "A python toolkit to evaluate, validate, and debug Azure Data Factory & Microsoft Fabric pipeline expressions with rich tracing."
 authors = [
-    {name = "Pit Nahrstedt",email = "pit_nahrstedt@web.de"}
+    {name = "Pit Nahrstedt",email = "pit.nahrstedt@outlook.de"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
