@@ -1,0 +1,145 @@
+[project]
+name = "fabrix"
+version = "0.1.0"
+description = "A python toolkit to evaluate, validate, and debug Azure Data Factory & Microsoft Fabric pipeline expressions with rich tracing."
+authors = [
+    {name = "Pit Nahrstedt",email = "pit_nahrstedt@web.de"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "pydantic (>=2.11.7,<3.0.0)",
+    "rich (>=14.1.0,<15.0.0)",
+    "pytz (>=2025.2,<2026.0)",
+    "python-dateutil (>=2.9.0.post0,<3.0.0)"
+]
+
+
+[tool.poetry]
+packages = [{include = "fabrix", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+pytest-sugar = "^1.1.1"
+pytest-mock = "^3.14.1"
+
+
+[tool.poetry.group.dev.dependencies]
+commitizen = "^4.8.3"
+ruff = "^0.12.10"
+mypy = "^1.17.1"
+pre-commit = "^4.3.0"
+
+
+[tool.poetry.group.types.dependencies]
+types-pytz = "^2025.2.0.20250809"
+types-python-dateutil = "^2.9.0.20250822"
+
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+changelog_incremental = true
+bump_message = "bump: 🚀 release version $new_version"
+tag_format = "$version"
+version_files = [
+    "src/fabrix/version.py:__version__",
+    "pyproject.toml:version"
+]
+version_scheme = "semver2"
+version_provider = "pep621"
+update_changelog_on_bump = true
+major_version_zero = true
+
+# https://mypy.readthedocs.io/en/latest/config_file.html
+[tool.mypy]
+junit_xml = "reports/mypy.xml"
+plugins = "pydantic.mypy"
+strict = true
+disallow_subclassing_any = false
+disallow_untyped_decorators = false
+explicit_package_bases = true
+ignore_missing_imports = true
+pretty = true
+show_column_numbers = true
+show_error_codes = true
+show_error_context = true
+warn_unreachable = true
+mypy_path = "src"
+
+# https://pydantic-docs.helpmanual.io/mypy_plugin/#configuring-the-plugin
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
+
+[tool.pytest.ini_options]
+addopts = '''
+    --color=yes
+    --doctest-modules
+    --strict-config
+    --strict-markers
+    --verbosity=2
+    --junitxml=reports/junit.xml
+    --cov-report=xml:reports/coverage.xml
+    --cov-report=term
+    --cov=src'''
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+    "ignore::SyntaxWarning"
+]
+testpaths = ["src", "tests"]
+xfail_strict = true
+log_file_level = "INFO"
+pythonpath = "src"
+
+# https://pytest-cov.readthedocs.io/en/latest/
+[tool.coverage.report]
+skip_empty = true
+show_missing = true
+ignore_errors = true
+exclude_lines = [
+    "@abstractmethod",
+    "@abc.abstractmethod",
+    "if self.debug:",
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:"
+]
+exclude_also= [
+  "class \\w+\\(Protocol\\):"
+]
+fail_under=80
+
+[tool.coverage.xml]
+output = "cover/coverage.xml"
+
+[tool.coverage.run]
+branch = true
+disable_warnings = ["ignore::UserWarning"]
+source = ["src", "tests"]
+omit= [
+  "*/__init__.py",
+  "*/__version__.py",
+  "tests/fixtures/*",
+  "**/fixtures.py"
+]
+
+# https://github.com/charliermarsh/ruff
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+target-version = "py311"
+force-exclude = true  # https://docs.astral.sh/ruff/settings/#force-exclude
+preview = true  # https://docs.astral.sh/ruff/preview/
