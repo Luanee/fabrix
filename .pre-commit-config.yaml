@@ -40,6 +40,7 @@ repos:
           - id: check-docstring-first
           - id: debug-statements # Check for debugger imports and py37+ breakpoint() calls in python source.
           - id: name-tests-test # Assert that files in tests/ end in _test.py, or optionally test*.py
+            args: [--pytest-test-first]
           - id: requirements-txt-fixer
 
     - repo: https://github.com/commitizen-tools/commitizen
