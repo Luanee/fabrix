@@ -1,4 +1,16 @@
-# 🧵 fabrix
+<p align="center">
+  <a href="https://github.com/Luanee/fabrix"><img src="docs/assets/images/logo.png" alt="fabrix"></a>
+</p>
+<p align="center">
+    <em>Evaluate expressions without the need of pipelines.</em>
+</p>
+<a href="https://pypi.org/project/fabrix" target="_blank">
+    <img src="https://img.shields.io/pypi/v/fabrix?color=%2647141&label=pypi%20package" alt="Package version">
+</a>
+<a href="https://pypi.org/project/fabrix" target="_blank">
+    <img src="https://img.shields.io/pypi/pyversions/fabrix.svg?color=%2647141" alt="Supported Python versions">
+</a>
+</p>
 
 **fabrix** is a Python toolkit to **evaluate, validate, and debug**
 [Microsoft Fabric / Azure Data Factory](https://learn.microsoft.com/en-us/fabric/data-factory/expression-language) pipeline expressions.
@@ -8,14 +20,12 @@ It helps you test expressions locally, manage variables & parameters, and visual
 
 ---
 
-## 🔗 Links
-
-- 📖 [Documentation (WIP)](https://github.com/yourname/fabrix/wiki)
-- 💻 [Source Code](https://github.com/yourname/fabrix)
+**Documentation:** [https://github.com/luanee/fabrix/wiki](https://github.com/yourname/fabrix/wiki)
+**Source Code:** [https://github.com/luanee/fabrix](https://github.com/yourname/fabrix)
 
 ---
 
-## ✨ Features
+## Features
 
 - Parse & evaluate Fabric/ADF expressions locally
 - Manage **variables**, **pipeline parameters**, and **scope values**
@@ -25,11 +35,10 @@ It helps you test expressions locally, manage variables & parameters, and visual
 
 ---
 
-## 📦 Requirements
+## Requirements
 
-- Python **3.11+**
-- [pydantic](https://docs.pydantic.dev) v2
-- [rich](https://rich.readthedocs.io/)
+- [pydantic](https://docs.pydantic.dev) for smaller validations
+- [rich](https://rich.readthedocs.io/) for beautiful output
 
 ---
 
