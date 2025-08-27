@@ -9,12 +9,14 @@ It helps you test expressions locally, manage variables & parameters, and visual
 ---
 
 ## 🔗 Links
+
 - 📖 [Documentation (WIP)](https://github.com/yourname/fabrix/wiki)
 - 💻 [Source Code](https://github.com/yourname/fabrix)
 
 ---
 
 ## ✨ Features
+
 - Parse & evaluate Fabric/ADF expressions locally
 - Manage **variables**, **pipeline parameters**, and **scope values**
 - Validate syntax: unmatched brackets, wrong quotes, unknown functions
@@ -24,6 +26,7 @@ It helps you test expressions locally, manage variables & parameters, and visual
 ---
 
 ## 📦 Requirements
+
 - Python **3.11+**
 - [pydantic](https://docs.pydantic.dev) v2
 - [rich](https://rich.readthedocs.io/)
@@ -31,6 +34,7 @@ It helps you test expressions locally, manage variables & parameters, and visual
 ---
 
 ## ⚙️ Installation
+
 ```bash
 pip install fabrix
 ```
