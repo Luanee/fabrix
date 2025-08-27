@@ -1,9 +1,11 @@
 import random
 import uuid
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, PrivateAttr
+from rich.text import Text
+from rich.tree import Tree
 
 
 def random_name(prefix="Pipeline") -> str:
@@ -83,7 +85,222 @@ class Scope(BaseModel):
 
 
 class ExpressionTraceback:
+    """Build and render a tree-like traceback of expression parsing and evaluation.
+
+    This class uses `rich.tree.Tree` and `rich.text.Text` to build a styled,
+    hierarchical tree representation of an expression evaluation process.
+    Nodes are created for parse steps, functions, variables, parameters,
+    literals, and errors. It can be used to trace evaluation logic in a
+    readable, colored console format.
+
+    Attributes
+    ----------
+    title : str
+        Default root title for the tree ("Expression").
+    _root : Tree
+        Root node of the expression tree.
+    _active_node : Tree
+        Currently active node where children will be appended.
+    stack : list[Tree]
+        Stack of active tree nodes for nesting control.
+    """
+
     title: str = "Expression"
+
+    def __init__(self, title: str | None = None) -> None:
+        """Initialize the expression traceback tree.
+
+        Parameters
+        ----------
+        title : str | None, optional
+            Optional title for the root node. Defaults to "Expression".
+        """
+        self._root = Tree(Text(title or self.title, style="bold cyan"))
+        self._active_node = self._root
+        self.stack: list[Tree] = [self._root]
+
+    @property
+    def root(self) -> Tree:
+        """Return the root tree node."""
+        return self._root
+
+    def _get_or_create(self, mode: Literal["get", "create"]) -> Tree:
+        """Get the active node or create a new child node.
+
+        Parameters
+        ----------
+        mode : {"get", "create"}
+            If "get", returns the current active node.
+            If "create", creates a new child node and makes it active.
+
+        Returns
+        -------
+        Tree
+            The retrieved or newly created tree node.
+        """
+        if mode == "get":
+            return self._active_node
+
+        parent = self.stack[-1]
+        child = parent.add(Text())
+        self.stack.append(child)
+        self._active_node = child
+        return child
+
+    def _set_node_label(
+        self,
+        node: Tree,
+        label: Text,
+        result: Any | None = None,
+        result_style: str | None = None,
+    ) -> None:
+        """Set the label of a tree node, optionally appending a result.
+
+        Parameters
+        ----------
+        node : Tree
+            The node to set the label for.
+        label : Text
+            The label text.
+        result : Any | None, optional
+            Result value to append to the label.
+        result_style : str | None, optional
+            Style to apply to the result text.
+        """
+        node.label = label
+        if result:
+            node.label = label.append(f" ➜ {result!r}", style=result_style)
+
+    def pop(self) -> None:
+        """Pop the last node off the stack if not at the root."""
+        if len(self.stack) > 1:
+            self.stack.pop()
+
+    def add_parse_node(self, label: str | Text) -> None:
+        """Add a parse step node.
+
+        Parameters
+        ----------
+        label : str | Text
+            Label for the parse step.
+        """
+        label = Text(f"Parse: {label}", style="yellow")
+        node = self._get_or_create("create")
+        self._set_node_label(node, label, result=None, result_style=None)
+
+    def add_function_node(self, label: str | Text, result: Any | None = None, node: Tree | None = None) -> Tree:
+        """Add a function node with optional result.
+
+        Parameters
+        ----------
+        label : str | Text
+            Function name label.
+        result : Any | None, optional
+            Result of the function call.
+        node : Tree | None, optional
+            Existing node to use instead of creating one.
+
+        Returns
+        -------
+        Tree
+            The created or reused function node.
+        """
+        label = Text("Function: ", style="magenta").append(Text(f"{label}", style="white"))
+        node = node if node else self._get_or_create("create")
+        self._set_node_label(node, label, result, result_style="green")
+
+        if result:
+            self.pop()
+
+        return node
+
+    def add_variable_node(self, label: str | Text, result: Any | None = None) -> None:
+        """Add a variable node with optional result.
+
+        Parameters
+        ----------
+        label : str | Text
+            Variable name.
+        result : Any | None, optional
+            Evaluated value of the variable.
+        """
+        label = (
+            Text("variables('", style="blue").append(Text(f"{label}", style="white")).append(Text("')", style="blue"))
+        )
+        node = self._get_or_create("get")
+        self._set_node_label(node, label, result, result_style="green")
+
+        if result:
+            self.pop()
+
+    def add_scope_node(self, label: str | Text, result: Any | None = None) -> None:
+        """Add a pipeline scope node (e.g., `pipeline().<scope>`).
+
+        Parameters
+        ----------
+        label : str | Text
+            Pipeline scope name.
+        result : Any | None, optional
+            Evaluated value of the pipeline scope.
+        """
+        label = Text("pipeline().", style="blue").append(Text(f"{label}", style="white"))
+        node = self._get_or_create("get")
+        self._set_node_label(node, label, result, result_style=None)
+
+    def add_parameter_node(self, label: str | Text, result: Any | None = None) -> None:
+        """Add a pipeline parameter node (e.g., `pipeline().parameters.<param>`).
+
+        Parameters
+        ----------
+        label : str | Text
+            Pipeline parameter name.
+        result : Any | None, optional
+            Evaluated value of the pipeline parameter.
+        """
+        label = Text("pipeline().parameters.", style="cyan").append(Text(f"{label}", style="white"))
+        node = self._get_or_create("get")
+        self._set_node_label(node, label, result, result_style=None)
+
+    def add_literal_node(self, label: str | Text) -> None:
+        """Add a literal value node.
+
+        Parameters
+        ----------
+        label : str | Text
+            Literal value as text.
+        """
+        label = Text(f"{label}", style="cyan")
+        node = self._get_or_create("get")
+        self._set_node_label(node, label)
+
+        self.pop()
+
+    def add_error(self, label: str, message: str, span: tuple[int, int] | None = None) -> None:
+        """Add an error node to the tree.
+
+        Highlights the error span in the label if provided, and adds
+        a child node with the error message.
+
+        Parameters
+        ----------
+        label : str
+            Expression text containing the error.
+        message : str
+            Error message to display.
+        span : tuple[int, int] | None, optional
+            Optional (start, end) indices to highlight the error span.
+        """
+        if span:
+            start, end = span
+            error_text = Text(label[:start])
+            error_text.append(label[start:end], style="bold red")
+            error_text.append(label[end:])
+        else:
+            error_text = Text(label, style="bold red")
+        error_node = self.stack[-1].add(error_text)
+        error_msg_text = Text(message, style="red")
+        error_node.add(error_msg_text)
+        self.pop()
 
 
 class Context(BaseModel):
@@ -104,3 +321,86 @@ class Context(BaseModel):
     pipeline_parameters: dict[str, Any] = Field(default_factory=dict)
     pipeline_scope_variables: Scope = Scope()
     _traces_: list[ExpressionTraceback] = PrivateAttr(default_factory=list)
+
+    def get_pipeline_scope_variable(
+        self,
+        name: Literal[
+            "DataFactory",
+            "Pipeline",
+            "RunId",
+            "TriggerId",
+            "TriggerName",
+            "TriggerTime",
+            "GroupId",
+            "TriggeredByPipelineName",
+            "TriggeredByPipelineRunId",
+        ]
+        | str,
+    ) -> str:
+        """
+        Get a pipeline scope variable by name from the context.
+
+        Parameters
+        ----------
+        name : str
+            The pipeline scope variable name.
+
+        Returns
+        -------
+        Any or None
+            The value if present, else None.
+        """
+        parameter = self.pipeline_scope_variables.get_by_alias(name)
+        if not parameter:
+            raise AttributeError(f"Invalid pipeline scope variable, got {name}, expected one of: x")
+        return parameter
+
+    def set_variable(self, name: str, value: int | str | bool | float | None) -> None:
+        self.variables.setdefault(name, value)
+
+    def get_variable(self, name: str) -> int | str | bool | float | None:
+        """
+        Get a variable by name from the context.
+
+        Parameters
+        ----------
+        name : str
+            The variable name.
+
+        Returns
+        -------
+        Any or None
+            The variable value if present, else None.
+        """
+        variable = self.variables.get(name)
+        if not variable:
+            raise KeyError(f"No variable with name {name} initialized.")
+        return variable
+
+    def get_parameter(self, name: str) -> int | str | bool | float | None:
+        """
+        Get a base pipeline parameter by name from the context.
+
+        Parameters
+        ----------
+        name : str
+            The base pipeline parameter name.
+
+        Returns
+        -------
+        Any or None
+            The parameter value if present, else None.
+        """
+        parameters = self.pipeline_parameters.get(name)
+        if not parameters:
+            raise KeyError(f"No parameters with name {name} initialized.")
+        return parameters
+
+    def add_trace(self, title: str | None = None) -> None:
+        trace = ExpressionTraceback(title)
+        self._traces_.append(trace)
+        self._active_trace = trace
+
+    @property
+    def active_trace(self) -> ExpressionTraceback:
+        return self._active_trace
