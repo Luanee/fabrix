@@ -4,8 +4,6 @@
 import pytest
 
 from fabrix.context import Context
-from fabrix.evaluate import evaluate
-from fabrix.exceptions import ExpressionSyntaxError, FunctionNotFoundError
 
 
 @pytest.fixture
