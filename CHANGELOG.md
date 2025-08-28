@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 (2025-08-28)
+
+### Feat
+
+- **evaluate**: Added main un method for expressions
+
 ## 0.3.0 (2025-08-28)
 
 ### Feat

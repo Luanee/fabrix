@@ -1,6 +1,6 @@
 [project]
 name = "fabrix"
-version = "0.3.0"
+version = "0.4.0"
 description = "A python toolkit to evaluate, validate, and debug Azure Data Factory & Microsoft Fabric pipeline expressions with rich tracing."
 authors = [
     {name = "Pit Nahrstedt",email = "pit.nahrstedt@outlook.de"}
