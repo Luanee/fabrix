@@ -51,12 +51,16 @@ pip install fabrix
 ## 🚀 Usage
 
 ```python
-from fabrix import Context, evaluate
+from fabrix import Context, Expression, evaluate, run
 
 # Create a context with parameters & variables
 ctx = Context(
-    pipeline_parameters={"myNumber": 42},
-    variables={"greeting": "hello"}
+    pipeline_parameters={
+        "myNumber": 42,
+    },
+    variables={
+        "greeting": "hello",
+    },
 )
 
 # Simple expression
@@ -64,14 +68,14 @@ result = evaluate("@concat('Answer is: ', string(pipeline().parameters.myNumber)
 print(result)  # Answer is: 42
 
 # With variable assignment
-from fabrix import Expression
-
-expr = Expression(expression="@toUpper(variables('greeting'))", result="shout")
+expr = Expression(expression="@toUpper(variables('greeting'))", variable="shout")
 evaluate(expr, context=ctx)
-
 print(ctx.variables["shout"])  # HELLO
 
+run(expr, context=ctx, show_output=True) # see output below
 ```
+
+![expression console output](docs/assets/images/example_output.png)
 
 ## 🗺️ Roadmap
 
