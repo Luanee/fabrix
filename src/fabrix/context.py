@@ -1,3 +1,4 @@
+import copy
 import random
 import uuid
 from datetime import datetime, timezone
@@ -24,37 +25,63 @@ class Scope(BaseModel):
     data_factory: str = Field(
         default=random_workspace(),
         alias="DataFactory",
+        description="Name of the data or Synapse workspace the pipeline run is running in",
     )
     pipeline: str = Field(
         default=random_name("Pipeline"),
+        description="Name of the pipeline",
         alias="Pipeline",
     )
     run_id: str = Field(
         default=str(uuid.uuid4()),
+        description="ID of the specific pipeline run",
         alias="RunId",
     )
     trigger_id: str = Field(
         default=str(uuid.uuid4()),
+        description="ID of the trigger that invoked the pipeline",
         alias="TriggerId",
     )
     trigger_name: str = Field(
         default=random_name("Trigger"),
+        description="Name of the trigger that invoked the pipeline",
         alias="TriggerName",
     )
     trigger_time: str = Field(
         default=now_iso(),
+        description="""
+        Time of the trigger run that invoked the pipeline.
+        This is the time at which the trigger actually fired to invoke the pipeline run,
+        and it may differ slightly from the trigger's scheduled time.
+        """,
         alias="TriggerTime",
     )
     group_id: str = Field(
         default=str(uuid.uuid4()),
+        description="""
+        ID of the group to which pipeline run belongs.
+        In Microsoft Fabric, a 'group' refers to a collection of related resources
+        that can be managed together. Groups are used to organize and control access to resources,
+        making it easier to manage permissions and monitor activities across multiple pipelines.
+        """,
         alias="GroupId",
     )
     triggered_by_pipeline_name: str | None = Field(
         default=None,
+        description="""
+        Name of the pipeline that triggers the pipeline run.
+        Applicable when the pipeline run is triggered by an ExecutePipeline activity.
+        Evaluate to Null when used in other circumstances. Note the question mark after @pipeline()
+        """,
         alias="TriggeredByPipelineName",
     )
     triggered_by_pipeline_run_id: str | None = Field(
         default=None,
+        description="""
+        Run ID of the pipeline that triggers the pipeline run.
+        Applicable when the pipeline run is triggered by an ExecutePipeline activity.
+        Evaluate to Null when used in other circumstances. Note the question mark after @pipeline()
+        """,
         alias="TriggeredByPipelineRunId",
     )
 
@@ -168,7 +195,7 @@ class ExpressionTraceback:
             Style to apply to the result text.
         """
         node.label = label
-        if result:
+        if result is not None:
             node.label = label.append(f" ➜ {result!r}", style=result_style)
 
     def pop(self) -> None:
@@ -186,7 +213,7 @@ class ExpressionTraceback:
         """
         label = Text(f"Parse: {label}", style="yellow")
         node = self._get_or_create("create")
-        self._set_node_label(node, label, result=None, result_style=None)
+        self._set_node_label(node, label)
 
     def add_function_node(self, label: str | Text, result: Any | None = None, node: Tree | None = None) -> Tree:
         """Add a function node with optional result.
@@ -209,7 +236,7 @@ class ExpressionTraceback:
         node = node if node else self._get_or_create("create")
         self._set_node_label(node, label, result, result_style="green")
 
-        if result:
+        if result is not None:
             self.pop()
 
         return node
@@ -227,11 +254,9 @@ class ExpressionTraceback:
         label = (
             Text("variables('", style="blue").append(Text(f"{label}", style="white")).append(Text("')", style="blue"))
         )
-        node = self._get_or_create("get")
+        node = self._get_or_create("create")
         self._set_node_label(node, label, result, result_style="green")
-
-        if result:
-            self.pop()
+        self.pop()
 
     def add_scope_node(self, label: str | Text, result: Any | None = None) -> None:
         """Add a pipeline scope node (e.g., `pipeline().<scope>`).
@@ -244,8 +269,9 @@ class ExpressionTraceback:
             Evaluated value of the pipeline scope.
         """
         label = Text("pipeline().", style="blue").append(Text(f"{label}", style="white"))
-        node = self._get_or_create("get")
+        node = self._get_or_create("create")
         self._set_node_label(node, label, result, result_style=None)
+        self.pop()
 
     def add_parameter_node(self, label: str | Text, result: Any | None = None) -> None:
         """Add a pipeline parameter node (e.g., `pipeline().parameters.<param>`).
@@ -258,8 +284,9 @@ class ExpressionTraceback:
             Evaluated value of the pipeline parameter.
         """
         label = Text("pipeline().parameters.", style="cyan").append(Text(f"{label}", style="white"))
-        node = self._get_or_create("get")
+        node = self._get_or_create("create")
         self._set_node_label(node, label, result, result_style=None)
+        self.pop()
 
     def add_literal_node(self, label: str | Text) -> None:
         """Add a literal value node.
@@ -270,9 +297,8 @@ class ExpressionTraceback:
             Literal value as text.
         """
         label = Text(f"{label}", style="cyan")
-        node = self._get_or_create("get")
+        node = self._get_or_create("create")
         self._set_node_label(node, label)
-
         self.pop()
 
     def add_error(self, label: str, message: str, span: tuple[int, int] | None = None) -> None:
