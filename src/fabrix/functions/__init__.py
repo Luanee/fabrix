@@ -1,30 +1,7 @@
-from fabrix.functions.strings import (
-    concat,
-    ends_with,
-    guid,
-    index_of,
-    last_index_of,
-    replace,
-    split,
-    starts_with,
-    substring,
-    to_lower,
-    to_upper,
-    trim,
-)
+from fabrix.functions import maths as MathFunctions
+from fabrix.functions import strings as StringFunctions
 
 __all__ = [
-    # string functions
-    "concat",
-    "ends_with",
-    "guid",
-    "index_of",
-    "last_index_of",
-    "replace",
-    "split",
-    "starts_with",
-    "substring",
-    "to_lower",
-    "to_upper",
-    "trim",
+    "StringFunctions",
+    "MathFunctions",
 ]
