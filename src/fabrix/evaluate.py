@@ -69,7 +69,8 @@ def evaluate(
 
         def replace_inner_expression(match) -> str:
             inner_expr = match.group(1).strip()
-            return str(_eval(inner_expr, context, raise_errors))
+            result = str(_eval(inner_expr, context, raise_errors))
+            return result
 
         return re.sub(r"@{([^}]+)}", replace_inner_expression, expr)
 
@@ -78,8 +79,12 @@ def evaluate(
 
     result = _eval(expr, context, raise_errors)
 
+    if expression.variable:
+        context.set_variable(expression.variable, result)
+
     if show_output:
         generate_context_output(context)
+
     return result
 
 
