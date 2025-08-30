@@ -20,7 +20,7 @@ def evaluate(
     context: Context | None = None,
     show_output: bool = False,
     raise_errors: bool = True,
-) -> Any:
+) -> str | int | float | bool | Any | None:
     """
     Evaluate an expression string in a given context, optionally tracing the steps.
 
@@ -57,7 +57,7 @@ def evaluate(
         context.active_trace.add_error(label=expr, message=str(exc), span=None)
         if raise_errors:
             raise exc from exc
-        return
+        return None
 
     if not isinstance(expr, str):
         return expr
