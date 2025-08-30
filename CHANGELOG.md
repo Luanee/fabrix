@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 (2025-08-30)
+
+### Fix
+
+- **evaluate**: Added output types+
+
 ## 0.4.0 (2025-08-28)
 
 ### Feat
