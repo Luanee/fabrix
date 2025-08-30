@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/Luanee/fabrix"><img src="docs/assets/images/logo.png" alt="fabrix"></a>
+  <a href="https://github.com/Luanee/fabrix"><img src="https://github.com/Luanee/fabrix/blob/main/docs/assets/images/logo.png?raw=true" alt="fabrix"></a>
 </p>
 <p align="center">
     <em>Evaluate expressions without the need of pipelines.</em>
@@ -20,8 +20,8 @@ It helps you test expressions locally, manage variables & parameters, and visual
 
 ---
 
-**Documentation:** [https://github.com/luanee/fabrix/wiki](https://github.com/yourname/fabrix/wiki)
-**Source Code:** [https://github.com/luanee/fabrix](https://github.com/yourname/fabrix)
+**Documentation:** [https://github.com/luanee/fabrix/wiki](https://github.com/luanee/fabrix)
+**Source Code:** [https://github.com/luanee/fabrix](https://github.com/luanee/fabrix)
 
 ---
 
@@ -75,7 +75,7 @@ print(ctx.variables["shout"])  # HELLO
 run(expr, context=ctx, show_output=True) # see output below
 ```
 
-![expression console output](docs/assets/images/example_output.png)
+![expression console output](https://github.com/Luanee/fabrix/blob/main/docs/assets/images/example_output.png?raw=true)
 
 ## 🗺️ Roadmap
 
@@ -84,4 +84,4 @@ run(expr, context=ctx, show_output=True) # see output below
 - [ ] Advanced type checking for function arguments
 - [ ] VS Code extension with syntax highlighting & validation
 - [ ] Better documentation and tutorials
-- [ ] Publish first stable release on PyPI
+- [x] Publish first stable release on PyPI
