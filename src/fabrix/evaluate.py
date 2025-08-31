@@ -112,6 +112,11 @@ def _eval(
     if result is not Flags.NO_MATCH:
         return result
 
+    # --- Activity ---
+    result = _evaluate_activity(expr, context)
+    if result is not Flags.NO_MATCH:
+        return result
+
     # ----------- Function call -----------
     result = _evaluate_function(expr, context, raise_errors)
     if result is not Flags.NO_MATCH:
@@ -164,6 +169,16 @@ def _evaluate_variable(
     result = context.get_variable(key)
     context.active_trace.add_variable_node(key, result=result)
     return result
+
+
+def _evaluate_activity(
+    expression: str,
+    context: Context,
+) -> Any:
+    activity_match = re.match(r"^activity\(\s*'((?:[^']|'{2})*)'\s*\)\.output(?P<path>.*)$", expression)
+    if not activity_match:
+        return Flags.NO_MATCH
+    return
 
 
 def _evaluate_function(
