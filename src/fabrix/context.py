@@ -202,6 +202,7 @@ class ExpressionTraceback:
         """Pop the last node off the stack if not at the root."""
         if len(self.stack) > 1:
             self.stack.pop()
+            self._active_node = self.stack[-1]  # <-- keep active node in sync
 
     def add_parse_node(self, label: str | Text) -> None:
         """Add a parse step node.

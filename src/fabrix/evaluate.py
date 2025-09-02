@@ -105,29 +105,34 @@ def _eval(
     # --- Pipeline parameter ---
     result = _evaluate_pipeline_parameter(expr, context)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # --- Pipeline scope variable ---
     result = _evaluate_pipeline_scope_parameter(expr, context)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # --- Variable ---
     result = _evaluate_variable(expr, context)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # --- Activity ---
     result = _evaluate_activity(expr, context, raise_errors)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # ----------- Function call -----------
     result = _evaluate_function(expr, context, raise_errors)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
-    # ----------- Literal/other -----------
+    context.active_trace.pop()
     return expr
 
 
@@ -270,6 +275,7 @@ def _evaluate_function(
     fn = registry.get(func_name)
 
     result = fn(*resolved_args)
+
     context.active_trace.add_function_node(func_name, result=result, node=node)
     context.active_trace.pop()
     return result
