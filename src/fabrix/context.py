@@ -270,7 +270,7 @@ class ExpressionTraceback:
         """
         label = Text("pipeline().", style="blue").append(Text(f"{label}", style="white"))
         node = self._get_or_create("create")
-        self._set_node_label(node, label, result, result_style=None)
+        self._set_node_label(node, label, result, result_style="green")
         self.pop()
 
     def add_parameter_node(self, label: str | Text, result: Any | None = None) -> None:
@@ -283,10 +283,27 @@ class ExpressionTraceback:
         result : Any | None, optional
             Evaluated value of the pipeline parameter.
         """
-        label = Text("pipeline().parameters.", style="cyan").append(Text(f"{label}", style="white"))
+        label = Text("pipeline().parameters.", style="blue").append(Text(f"{label}", style="white"))
         node = self._get_or_create("create")
-        self._set_node_label(node, label, result, result_style=None)
+        self._set_node_label(node, label, result, result_style="green")
         self.pop()
+
+    def add_activity_node(
+        self, label: str | Text, path: str | Text, result: Any | None = None, node: Tree | None = None
+    ) -> Tree:
+        label = (
+            Text("activity('", style="blue")
+            .append(Text(f"{label}", style="white"))
+            .append(Text("').output", style="blue"))
+            .append(Text(f"{path}", style="white"))
+        )
+        node = node if node else self._get_or_create("create")
+        self._set_node_label(node, label, result, result_style="green")
+
+        if result is not None:
+            self.pop()
+
+        return node
 
     def add_literal_node(self, label: str | Text) -> None:
         """Add a literal value node.
@@ -296,7 +313,7 @@ class ExpressionTraceback:
         label : str | Text
             Literal value as text.
         """
-        label = Text(f"{label}", style="cyan")
+        label = Text(f"{label}", style="green")
         node = self._get_or_create("create")
         self._set_node_label(node, label)
         self.pop()
@@ -343,10 +360,32 @@ class Context(BaseModel):
         Built-in pipeline-level variables (see below).
     """
 
+    activities: dict[str, Any] = Field(default_factory=dict)
     variables: dict[str, Any] = Field(default_factory=dict)
     pipeline_parameters: dict[str, Any] = Field(default_factory=dict)
     pipeline_scope_variables: Scope = Scope()
+
     _traces_: list[ExpressionTraceback] = PrivateAttr(default_factory=list)
+
+    def set_activity_output(self, activity_name: str, output: Any) -> None:
+        """
+        Store or update an activity's output payload.
+        """
+        self.activities.setdefault(activity_name, {}).update({"output": output})
+
+    def get_activity_output(self, name: str) -> Any:
+        """
+        Retrieve the `.output` object for a given activity.
+
+        Raises
+        ------
+        KeyError if the activity or its output is missing.
+        """
+        activity = self.activities.get(name)
+        if not activity:
+            raise KeyError(f"Activity '{name}' or its output is not available in context.activities.")
+
+        return activity.get("output")
 
     def get_pipeline_scope_variable(
         self,
@@ -398,10 +437,9 @@ class Context(BaseModel):
         Any or None
             The variable value if present, else None.
         """
-        variable = self.variables.get(name)
-        if not variable:
+        if name not in self.variables:
             raise KeyError(f"No variable with name {name} initialized.")
-        return variable
+        return self.variables.get(name)
 
     def get_parameter(self, name: str) -> int | str | bool | float | None:
         """
@@ -417,10 +455,9 @@ class Context(BaseModel):
         Any or None
             The parameter value if present, else None.
         """
-        parameters = self.pipeline_parameters.get(name)
-        if not parameters:
+        if name not in self.pipeline_parameters:
             raise KeyError(f"No parameters with name {name} initialized.")
-        return parameters
+        return self.pipeline_parameters.get(name)
 
     def add_trace(self, title: str | None = None) -> None:
         trace = ExpressionTraceback(title)

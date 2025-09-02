@@ -42,6 +42,35 @@ def test_complex_nested_expressions(ctx: Context, expr: str, expected: str) -> N
 
 
 @pytest.mark.parametrize(
+    "expr, expected",
+    [
+        ("@activity('CopyData').output.rows[0].value", 10),
+        ("@activity('CopyData').output.rows[pipeline().parameters.idx].value", 20),
+        ("@activity('CopyData').output.meta.ok", True),
+        ("@activity('CopyData').output.meta.tags[variables('row_index')]", "a"),
+        ("@activity('Bobs Task').output.result.message", "done"),
+        ("@activity('CopyData').output.rows[add(1,1)].value", 30),
+    ],
+)
+def test_activity_expressions(ctx: Context, expr: str, expected: str | int | bool) -> None:
+    assert evaluate(expr, ctx) == expected
+
+
+@pytest.mark.parametrize(
+    "expr, error_pattern",
+    [
+        ("@activity('Missing').output.rows[0].value", r"Activity 'Missing'.*not available"),
+        ("@activity('CopyData').output.nonesuch", r"Missing field 'nonesuch'"),
+        ("@activity('CopyData').output.rows['x'].value", r"Invalid index/field \['x'\]"),
+        ("@activity('CopyData').output.rows[99].value", r"Invalid index/field \[99\]"),
+    ],
+)
+def test_activity_expressions_errors(ctx: Context, expr: str, error_pattern: str) -> None:
+    with pytest.raises(KeyError, match=error_pattern):
+        evaluate(expr, ctx)
+
+
+@pytest.mark.parametrize(
     "expr,exception,error",
     [
         (
