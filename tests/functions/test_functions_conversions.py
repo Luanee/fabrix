@@ -81,3 +81,15 @@ def test_base64(ctx: Context, expr: str, expected: str) -> None:
 )
 def test_base64_to_string(ctx: Context, expr: str, expected: str) -> None:
     assert evaluate(expr, ctx) == expected
+
+
+@pytest.mark.parametrize(
+    "expr,expected",
+    [
+        ("@coalesce(null, true, false)", True),
+        ("@coalesce(null, 'hello', 'world')", "hello"),
+        ("@coalesce(null, null, null)", None),
+    ],
+)
+def test_coalesce(ctx: Context, expr: str, expected: str) -> None:
+    assert evaluate(expr, ctx) == expected

@@ -11,7 +11,7 @@ from fabrix.exceptions import ExpressionSyntaxError, FunctionNotFoundError
 from fabrix.functions import *  # noqa: F403
 from fabrix.registry import registry
 from fabrix.schemas import Expression, Flags
-from fabrix.utils import as_float, as_int, as_string, clean_expression
+from fabrix.utils import as_float, as_int, clean_expression
 from fabrix.validations import validate_function, validate_syntax
 
 
@@ -95,32 +95,45 @@ def _eval(
 ) -> Any:
     expr = clean_expression(expr)
 
+    # ----------- Literal/other -----------
+    result = _evaluate_literal(expr, context)
+    if result is not Flags.NO_MATCH:
+        return result
+
     context.active_trace.add_parse_node(expr)
 
     # --- Pipeline parameter ---
     result = _evaluate_pipeline_parameter(expr, context)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # --- Pipeline scope variable ---
     result = _evaluate_pipeline_scope_parameter(expr, context)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # --- Variable ---
     result = _evaluate_variable(expr, context)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
+        return result
+
+    # --- Activity ---
+    result = _evaluate_activity(expr, context, raise_errors)
+    if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
     # ----------- Function call -----------
     result = _evaluate_function(expr, context, raise_errors)
     if result is not Flags.NO_MATCH:
+        context.active_trace.pop()
         return result
 
-    # ----------- Literal/other -----------
-    result = _evaluate_literal(expr, context)
-    context.active_trace.add_literal_node(expr)
-    return result
+    context.active_trace.pop()
+    return expr
 
 
 def _evaluate_pipeline_parameter(
@@ -164,6 +177,58 @@ def _evaluate_variable(
     result = context.get_variable(key)
     context.active_trace.add_variable_node(key, result=result)
     return result
+
+
+def _evaluate_activity(
+    expression: str,
+    context: Context,
+    raise_errors: bool,
+) -> Any:
+    activity_pattern = re.compile(
+        r"^activity\(\s*'(?P<activity>(?:[^']|'{2})*)'\s*\)\.output(?P<path>.*)$", re.IGNORECASE
+    )
+    segment_pattern = re.compile(r"(?:\.([A-Za-z_][A-Za-z0-9_]*)|\[\s*(.*?)\s*\])", re.VERBOSE)
+    activity_match = activity_pattern.match(expression)
+    if not activity_match:
+        return Flags.NO_MATCH
+
+    activity_name = activity_match.group("activity")
+    path = activity_match.group("path")
+    output = context.get_activity_output(activity_name)
+    node = context.active_trace.add_activity_node(activity_name, path=path)
+
+    path_segments: list[str] = []
+    for segment in segment_pattern.finditer(path):
+        field = segment.group(1)
+        inner = (segment.group(2) or "").strip()
+        if field:
+            try:
+                if isinstance(output, dict):
+                    output = output.get(field)
+                else:
+                    output = getattr(output, field)
+                if output is None:
+                    raise
+            except Exception as e:
+                raise KeyError(f"Missing field '{field}' on activity('{activity_name}').output path.") from e
+            path_segments.append(field)
+        else:
+            field = _eval(inner, context, raise_errors)
+            try:
+                if isinstance(output, (list, tuple)):
+                    output = output[int(field)]
+                elif isinstance(output, dict):
+                    output = output.get(field)
+                if output is None:
+                    raise
+            except Exception as e:
+                raise KeyError(f"Invalid index/field [{field!r}] on activity('{activity_name}').output path.") from e
+            path_segments.append(f"[{str(field)}]")
+
+    activity_path = f".{'.'.join(path_segments)}"
+    context.active_trace.add_activity_node(activity_name, path=activity_path, result=output, node=node)
+    context.active_trace.pop()
+    return output
 
 
 def _evaluate_function(
@@ -210,6 +275,7 @@ def _evaluate_function(
     fn = registry.get(func_name)
 
     result = fn(*resolved_args)
+
     context.active_trace.add_function_node(func_name, result=result, node=node)
     context.active_trace.pop()
     return result
@@ -277,21 +343,39 @@ def _evaluate_literal(expression: str, context: Context) -> Any:
     Any
         The resolved value, or expression if not found.
     """
+    mode: Flags = Flags.NO_MATCH
+    result: Any = None
     expression = expression.strip()
 
-    literal_match = re.match(r"^'(?P<literal>(.*?))'$", expression)
-    if literal_match:
-        return re.sub(r"'+", "'", literal_match.group(1))
+    if result is None:
+        literal_match = re.match(r"^'(?P<literal>(.*?))'$", expression)
+        if literal_match:
+            result = re.sub(r"'+", "'", literal_match.group(1))
+            mode = Flags.LITERAL_MATCH
 
-    if expression.lower() in ("true", "false"):
-        return expression.lower() == "true"
+    if result is None:
+        if expression.lower() in ("true", "false"):
+            result = expression.lower() == "true"
+            mode = Flags.BOOLEAN_MATCH
 
-    num_pat = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
-    if re.fullmatch(num_pat, expression):
-        # if it contains '.' or 'e/E', prefer float
-        if any(c in expression for c in (".", "e", "E")):
-            return as_float(expression)
-        return as_int(expression)
+    if result is None:
+        num_pat = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+        num_match = re.fullmatch(num_pat, expression)
+        if num_match:
+            # if it contains '.' or 'e/E', prefer float
+            if any(c in expression for c in (".", "e", "E")):
+                result = as_float(expression)
+            else:
+                result = as_int(expression)
+            mode = Flags.NUMBER_MATCH
 
-    # 4) Fallback: treat as plain string token (unquoted)
-    return as_string(expression)
+    if result is None:
+        if expression.lower() == "null":
+            result = None
+            mode = Flags.NULL_MATCH
+
+    if mode is Flags.NO_MATCH:
+        return Flags.NO_MATCH
+
+    context.active_trace.add_literal_node(expression)
+    return result
