@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 (2025-09-02)
+
+### Feat
+
+- **parser**: Added parsing method to deal with activity outputs
+- **evaluate**: Implementation of activity parsing
+
+### Fix
+
+- **output**: Fixed invalid indention of nodes
+- **functions**: Removed not supported function by micrososft expressions
+
 ## 0.4.1 (2025-08-30)
 
 ### Fix
