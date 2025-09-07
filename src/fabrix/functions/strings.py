@@ -177,7 +177,7 @@ def starts_with(string: str, prefix: str) -> bool:
 def substring(
     string: str,
     start: int,
-    length: int | None = None,
+    length: int,
 ) -> str:
     """
     Return characters from a string, starting from the specified position.
@@ -198,10 +198,15 @@ def substring(
     """
     s = as_string(string)
     start = as_int(start)
-    if length is not None:
-        length = as_int(length)
-        return s[start : start + length]
-    return s[start:]
+    length = as_int(length)
+
+    if any(value < 0 for value in (start, length)):
+        raise ValueError("Parameters 'start' and 'length' should be greater equal 0")
+
+    if start + length > len(s):
+        raise ValueError("Sum of parameters 'start' and 'length' should be equal to to length of the string.")
+
+    return s[start : start + length]
 
 
 @registry.register("toLower")
