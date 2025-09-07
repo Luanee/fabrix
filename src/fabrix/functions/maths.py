@@ -158,5 +158,4 @@ def min_func(
     float
         The minimum value.
     """
-    print(args)
     return min(float(arg) for arg in args)

@@ -60,6 +60,7 @@ ctx = Context(
     },
     variables={
         "greeting": "hello",
+        "row_index": 1,
     },
 )
 
@@ -68,11 +69,11 @@ result = evaluate("@concat('Answer is: ', string(pipeline().parameters.myNumber)
 print(result)  # Answer is: 42
 
 # With variable assignment
-expr = Expression(expression="@toUpper(variables('greeting'))", variable="shout")
-evaluate(expr, context=ctx)
-print(ctx.variables["shout"])  # HELLO
+expr_1 = Expression(expression="@toUpper(variables('greeting'))", variable="shout")
+expr_2 = Expression(expression="@add(variables('row_index'),mul(4,5),add(variables('row_index'),max(4.5,3.9,578.4)))")
 
-run(expr, context=ctx, show_output=True) # see output below
+run(expr_1, expr_2, context=ctx, show_output=True)  # see output below
+print(ctx.variables["shout"])  # HELLO
 ```
 
 ![expression console output](https://github.com/Luanee/fabrix/blob/main/docs/assets/images/example_output.png?raw=true)
