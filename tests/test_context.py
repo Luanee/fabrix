@@ -103,7 +103,7 @@ def test_trace_variable_parameter_scope_nodes_and_results() -> None:
 
     # We expect three children appended in order
     labels = [str(ch.label) for ch in func_node.children]
-    print(labels)
+
     assert any("variables('foo')" in L for L in labels)
     assert any("pipeline().parameters.bar" in L for L in labels)
     # variable node shows result arrow
