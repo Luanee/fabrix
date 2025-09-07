@@ -86,7 +86,7 @@ def test_startswith(ctx: Context, expr: str, expected: bool) -> None:
     "expr,expected",
     [
         ("@substring('abcdef', 2, 3)", "cde"),
-        ("@substring('abcdef', 2)", "cdef"),
+        ("@substring('abcdef', 2, 4)", "cdef"),
         ("@substring('abcdef', 0, 2)", "ab"),
     ],
 )
