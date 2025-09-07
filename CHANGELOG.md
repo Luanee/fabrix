@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.1 (2025-09-07)
+
+### Fix
+
+- **evaluate**: Fixed node handling in case of a function result
+- **functions**: Fixed invalid handling of substring function in regard of length parameter
+- **functions**: Removed unnecessary print statement on math function min
+
 ## 0.5.0 (2025-09-02)
 
 ### Feat
