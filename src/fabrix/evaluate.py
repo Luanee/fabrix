@@ -129,7 +129,6 @@ def _eval(
     # ----------- Function call -----------
     result = _evaluate_function(expr, context, raise_errors)
     if result is not Flags.NO_MATCH:
-        context.active_trace.pop()
         return result
 
     context.active_trace.pop()
