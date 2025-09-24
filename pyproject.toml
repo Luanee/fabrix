@@ -29,7 +29,7 @@ build-backend = "poetry.core.masonry.api"
 pytest = "^8.4.2"
 pytest-cov = "^6.2.1"
 pytest-sugar = "^1.1.1"
-pytest-mock = "^3.14.1"
+pytest-mock = "^3.15.1"
 
 
 [tool.poetry.group.dev.dependencies]
