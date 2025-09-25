@@ -10,6 +10,9 @@
 <a href="https://pypi.org/project/fabrix" target="_blank">
     <img src="https://img.shields.io/pypi/pyversions/fabrix.svg?color=%2647141" alt="Supported Python versions">
 </a>
+<a href="https://codecov.io/gh/Luanee/fabrix" >
+ <img alt="Codecov" src="https://img.shields.io/codecov/c/github/luanee/fabrix?token=AXJUZN6J4U&color=%252647141">
+</a>
 </p>
 
 **fabrix** is a Python toolkit to **evaluate, validate, and debug**
