@@ -99,8 +99,7 @@ def test_as_datetime_from_string() -> None:
 
 
 def test_as_datetime_from_timestamp() -> None:
-    ts = 1704100800
-    dt = as_datetime(ts, "UTC")
+    dt = as_datetime("2024-01-01T10:20:00", "UTC")
     assert dt == datetime.datetime(2024, 1, 1, 10, 20, tzinfo=pytz.timezone("UTC"))
 
 
