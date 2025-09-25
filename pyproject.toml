@@ -2,52 +2,59 @@
 name = "fabrix"
 version = "0.5.1"
 description = "A python toolkit to evaluate, validate, and debug Azure Data Factory & Microsoft Fabric pipeline expressions with rich tracing."
-authors = [
-    {name = "Pit Nahrstedt",email = "pit.nahrstedt@outlook.de"}
-]
-license = {text = "MIT"}
-readme = "README.md"
+authors = [{ name = "Pit Nahrstedt", email = "pit.nahrstedt@outlook.de" }]
 requires-python = ">=3.11,<4.0"
+readme = "README.md"
+license = { text = "MIT" }
 dependencies = [
     "pydantic (>=2.11.7,<3.0.0)",
     "rich (>=14.1.0,<15.0.0)",
     "pytz (>=2025.2,<2026.0)",
-    "python-dateutil (>=2.9.0.post0,<3.0.0)"
+    "python-dateutil (>=2.9.0.post0,<3.0.0)",
 ]
 
+[dependency-groups]
+test = [
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
+    "pytest-sugar==1.1.1,<2",
+    "pytest-mock==3.15.1",
+]
+dev = [
+    "commitizen==4.9.1",
+    "ruff==0.13.2",
+    "mypy==1.18.2",
+    "pre-commit==4.3.0,<5",
+]
+types = [
+    "types-pytz==2025.2.0.20250809,<2026",
+    "types-python-dateutil==2.9.0.20250822,<3",
+]
 
-[tool.poetry]
-packages = [{include = "fabrix", from = "src"}]
+[tool.uv]
+default-groups = [
+    "test",
+    "dev",
+    "types",
+]
 
+[tool.hatch.build.targets.sdist]
+include = ["src/fabrix"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/fabrix"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/fabrix" = "fabrix"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.4.2"
-pytest-cov = "^7.0.0"
-pytest-sugar = "^1.1.1"
-pytest-mock = "^3.15.1"
-
-
-[tool.poetry.group.dev.dependencies]
-commitizen = "^4.9.1"
-ruff = "^0.12.10"
-mypy = "^1.17.1"
-pre-commit = "^4.3.0"
-
-
-[tool.poetry.group.types.dependencies]
-types-pytz = "^2025.2.0.20250809"
-types-python-dateutil = "^2.9.0.20250822"
-
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
 changelog_incremental = true
-bump_message = "bump: 🚀 release version $new_version"
+bump_message = "🚀 release version $new_version"
 tag_format = "$version"
 version_files = [
     "src/fabrix/version.py:__version__",
@@ -58,7 +65,6 @@ version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
 
-# https://mypy.readthedocs.io/en/latest/config_file.html
 [tool.mypy]
 junit_xml = "reports/mypy.xml"
 plugins = "pydantic.mypy"
@@ -74,13 +80,11 @@ show_error_context = true
 warn_unreachable = true
 mypy_path = "src"
 
-# https://pydantic-docs.helpmanual.io/mypy_plugin/#configuring-the-plugin
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 warn_untyped_fields = true
-
 
 [tool.pytest.ini_options]
 addopts = '''
@@ -104,7 +108,6 @@ xfail_strict = true
 log_file_level = "INFO"
 pythonpath = "src"
 
-# https://pytest-cov.readthedocs.io/en/latest/
 [tool.coverage.report]
 skip_empty = true
 show_missing = true
@@ -136,7 +139,6 @@ omit= [
   "**/fixtures.py"
 ]
 
-# https://github.com/charliermarsh/ruff
 [tool.ruff]
 line-length = 120
 src = ["src", "tests"]
