@@ -65,6 +65,12 @@ version_provider = "pep621"
 update_changelog_on_bump = true
 major_version_zero = true
 
+[tool.commitizen.customize]
+message_template = "{{change_type}}{{scope}}: {{message}}"
+example = "feat: add new feature"
+schema = "<type>(<scope>): <subject>"
+schema_pattern = "^(🚀\\s+release\\s+version\\s+.+|build|ci|docs|feat|fix|perf|refactor|style|test|chore|revert)(\\(.+\\))?!?:\\s+.+|^🚀\\s+release\\s+version\\s+.+"
+
 [tool.mypy]
 junit_xml = "reports/mypy.xml"
 plugins = "pydantic.mypy"
