@@ -28,7 +28,7 @@ dev = [
 ]
 types = [
     "types-pytz==2025.2.0.20250809,<2026",
-    "types-python-dateutil==2.9.0.20250822,<3",
+    "types-python-dateutil==2.9.0.20251115",
 ]
 
 [tool.uv]
