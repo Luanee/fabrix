@@ -24,7 +24,7 @@ dev = [
     "commitizen==4.9.1",
     "ruff==0.13.2",
     "mypy==1.18.2",
-    "pre-commit==4.3.0,<5",
+    "pre-commit==4.5.0",
 ]
 types = [
     "types-pytz==2025.2.0.20250809,<2026",
